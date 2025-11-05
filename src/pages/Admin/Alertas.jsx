@@ -1,272 +1,192 @@
-import React from "react";
-import { 
-  FaBell, 
-  FaExclamationTriangle, 
-  FaInfoCircle, 
-  FaCheckCircle,
-  FaTimes // ✅ AÑADÍ ESTA IMPORTACIÓN QUE FALTABA
-} from "react-icons/fa";
+import React, { useState } from "react";
+import { FaExclamationTriangle, FaCalendarAlt, FaBoxOpen, FaFilter } from "react-icons/fa";
+import { useProducts } from "../../context/ProductContext";
 
 const Alertas = () => {
-  // Datos de ejemplo para las alertas
-  const alertas = [
-    {
-      id: 1,
-      tipo: "urgente",
-      titulo: "Stock bajo en productos",
-      descripcion: "El producto 'Leche Entera 1L' tiene menos de 10 unidades en stock",
-      fecha: "Hace 5 minutos",
-      leido: false
-    },
-    {
-      id: 2,
-      tipo: "informacion",
-      titulo: "Nueva entrada registrada",
-      descripcion: "Se registró una entrada de 50 unidades de 'Arroz Integral'",
-      fecha: "Hace 2 horas",
-      leido: true
-    },
-    {
-      id: 3,
-      tipo: "advertencia",
-      titulo: "Producto próximo a vencer",
-      descripcion: "El producto 'Yogurt Natural' vence en 3 días",
-      fecha: "Hace 1 día",
-      leido: false
-    },
-    {
-      id: 4,
-      tipo: "exito",
-      titulo: "Inventario actualizado",
-      descripcion: "El inventario se sincronizó correctamente con el sistema",
-      fecha: "Hace 2 días",
-      leido: true
-    }
+  const { getLowStockProducts, getOutOfStockProducts, getExpiringProducts, getExpiredProducts } = useProducts();
+  const [activeTab, setActiveTab] = useState('expiring');
+
+  const lowStockProducts = getLowStockProducts();
+  const outOfStockProducts = getOutOfStockProducts();
+  const expiringProducts = getExpiringProducts(7);
+  const expiredProducts = getExpiredProducts();
+
+  const tabs = [
+    { id: 'expiring', label: 'Por Vencer', count: expiringProducts.length, color: 'orange' },
+    { id: 'expired', label: 'Vencidos', count: expiredProducts.length, color: 'red' },
+    { id: 'lowStock', label: 'Stock Bajo', count: lowStockProducts.length, color: 'yellow' },
+    { id: 'outOfStock', label: 'Agotados', count: outOfStockProducts.length, color: 'pink' }
   ];
 
-  // Función para obtener los estilos según el tipo de alerta
-  const getEstilosAlerta = (tipo) => {
-    switch (tipo) {
-      case "urgente":
-        return {
-          bg: "bg-red-50 border-red-200",
-          icon: "text-red-600",
-          text: "text-red-800",
-          badge: "bg-red-100 text-red-800"
-        };
-      case "advertencia":
-        return {
-          bg: "bg-yellow-50 border-yellow-200",
-          icon: "text-yellow-600",
-          text: "text-yellow-800",
-          badge: "bg-yellow-100 text-yellow-800"
-        };
-      case "informacion":
-        return {
-          bg: "bg-blue-50 border-blue-200",
-          icon: "text-blue-600",
-          text: "text-blue-800",
-          badge: "bg-blue-100 text-blue-800"
-        };
-      case "exito":
-        return {
-          bg: "bg-green-50 border-green-200",
-          icon: "text-green-600",
-          text: "text-green-800",
-          badge: "bg-green-100 text-green-800"
-        };
-      default:
-        return {
-          bg: "bg-gray-50 border-gray-200",
-          icon: "text-gray-600",
-          text: "text-gray-800",
-          badge: "bg-gray-100 text-gray-800"
-        };
+  const getCurrentProducts = () => {
+    switch (activeTab) {
+      case 'expiring': return expiringProducts;
+      case 'expired': return expiredProducts;
+      case 'lowStock': return lowStockProducts;
+      case 'outOfStock': return outOfStockProducts;
+      default: return [];
     }
   };
 
-  // Función para obtener el icono según el tipo
-  const getIcono = (tipo) => {
-    switch (tipo) {
-      case "urgente":
-        return <FaExclamationTriangle className="text-red-600" />;
-      case "advertencia":
-        return <FaExclamationTriangle className="text-yellow-600" />;
-      case "informacion":
-        return <FaInfoCircle className="text-blue-600" />;
-      case "exito":
-        return <FaCheckCircle className="text-green-600" />;
-      default:
-        return <FaBell className="text-gray-600" />;
+  const getAlertColor = (tab) => {
+    switch (tab) {
+      case 'expiring': return 'border-orange-500/30 bg-orange-500/10';
+      case 'expired': return 'border-red-500/30 bg-red-500/10';
+      case 'lowStock': return 'border-yellow-500/30 bg-yellow-500/10';
+      case 'outOfStock': return 'border-pink-500/30 bg-pink-500/10';
+      default: return 'border-gray-500/30 bg-gray-500/10';
+    }
+  };
+
+  const getAlertIcon = (tab) => {
+    switch (tab) {
+      case 'expiring':
+      case 'expired': return <FaCalendarAlt className="text-orange-400" />;
+      case 'lowStock':
+      case 'outOfStock': return <FaBoxOpen className="text-yellow-400" />;
+      default: return <FaExclamationTriangle className="text-gray-400" />;
+    }
+  };
+
+  const getAlertMessage = (tab, product) => {
+    const daysUntilExpiry = Math.ceil((new Date(product.fecha) - new Date()) / (1000 * 60 * 60 * 24));
+
+    switch (tab) {
+      case 'expiring':
+        return `Vence en ${daysUntilExpiry} día${daysUntilExpiry !== 1 ? 's' : ''}`;
+      case 'expired':
+        return `Venció hace ${Math.abs(daysUntilExpiry)} día${Math.abs(daysUntilExpiry) !== 1 ? 's' : ''}`;
+      case 'lowStock':
+        return `Stock bajo: ${product.stock} unidades`;
+      case 'outOfStock':
+        return 'Producto agotado';
+      default: return '';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full pt-6 px-4 sm:px-6 lg:px-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FaBell className="text-blue-600" />
-            Sistema de Alertas
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Gestiona y revisa todas las notificaciones del sistema
-          </p>
+      <div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          Sistema de Alertas
+        </h1>
+        <p className="text-gray-400 mt-2">Monitorea productos que requieren atención</p>
+      </div>
+
+      {/* Alert Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
+              activeTab === tab.id
+                ? getAlertColor(tab.color)
+                : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50'
+            }`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <div className="flex items-center justify-between mb-2">
+              {getAlertIcon(tab.id)}
+              <span className={`text-2xl font-bold ${
+                tab.color === 'orange' ? 'text-orange-400' :
+                tab.color === 'red' ? 'text-red-400' :
+                tab.color === 'yellow' ? 'text-yellow-400' :
+                'text-pink-400'
+              }`}>
+                {tab.count}
+              </span>
+            </div>
+            <p className="text-white text-sm font-medium">{tab.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Active Tab Content */}
+      <div className={`rounded-2xl border p-6 ${getAlertColor(activeTab.split('Stock')[0].toLowerCase())}`}>
+        <div className="flex items-center gap-3 mb-6">
+          {getAlertIcon(activeTab)}
+          <h2 className="text-xl font-bold text-white">
+            {tabs.find(tab => tab.id === activeTab)?.label}
+          </h2>
+          <span className="bg-gray-900/50 text-gray-300 px-3 py-1 rounded-full text-sm">
+            {getCurrentProducts().length} producto{getCurrentProducts().length !== 1 ? 's' : ''}
+          </span>
         </div>
 
-        {/* Estadísticas Rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Alertas</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">24</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <FaBell className="text-blue-600 text-xl" />
-              </div>
+        {getCurrentProducts().length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaExclamationTriangle className="text-gray-400 text-2xl" />
             </div>
+            <p className="text-gray-400 text-lg">No hay alertas en esta categoría</p>
+            <p className="text-gray-500 text-sm mt-2">¡Todo está bajo control!</p>
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Urgentes</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">5</p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <FaExclamationTriangle className="text-red-600 text-xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">No Leídas</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1">8</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <FaInfoCircle className="text-yellow-600 text-xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Resueltas</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">16</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <FaCheckCircle className="text-green-600 text-xl" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filtros y Acciones */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex flex-wrap gap-2">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                Todas
-              </button>
-              <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
-                No Leídas
-              </button>
-              <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
-                Urgentes
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                Marcar Todas como Leídas
-              </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-                Limpiar Todas
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Lista de Alertas */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Alertas Recientes</h2>
-          </div>
-          
-          <div className="divide-y divide-gray-200">
-            {alertas.map((alerta) => {
-              const estilos = getEstilosAlerta(alerta.tipo);
-              return (
-                <div
-                  key={alerta.id}
-                  className={`p-6 hover:bg-gray-50 transition-colors duration-200 ${estilos.bg} border-l-4 ${
-                    alerta.tipo === "urgente" ? "border-l-red-500" :
-                    alerta.tipo === "advertencia" ? "border-l-yellow-500" :
-                    alerta.tipo === "informacion" ? "border-l-blue-500" :
-                    "border-l-green-500"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-full ${estilos.bg}`}>
-                      {getIcono(alerta.tipo)}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className={`font-semibold ${estilos.text} truncate`}>
-                          {alerta.titulo}
-                        </h3>
-                        {!alerta.leido && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            Nuevo
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm mb-3">
-                        {alerta.descripcion}
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                        <span>{alerta.fecha}</span>
-                        <span className={`px-2 py-1 rounded-full ${estilos.badge} font-medium`}>
-                          {alerta.tipo.charAt(0).toUpperCase() + alerta.tipo.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button className="p-2 text-gray-400 hover:text-green-600 transition-colors">
-                        <FaCheckCircle size={16} />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                        <FaTimes size={16} /> {/* ✅ AHORA ESTÁ DEFINIDO */}
-                      </button>
-                    </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {getCurrentProducts().map((product) => (
+              <div key={product.id} className="bg-gray-900/50 rounded-xl p-4 border border-gray-700/30">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-white font-semibold text-lg">{product.nombre}</h3>
+                    <p className="text-gray-400 text-sm">{product.categoria}</p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    activeTab === 'expiring' ? 'bg-orange-500/20 text-orange-400' :
+                    activeTab === 'expired' ? 'bg-red-500/20 text-red-400' :
+                    activeTab === 'lowStock' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-pink-500/20 text-pink-400'
+                  }`}>
+                    {activeTab === 'lowStock' || activeTab === 'outOfStock' ? product.stock : product.fecha}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Mensaje cuando no hay alertas */}
-        {alertas.length === 0 && (
-          <div className="text-center py-12">
-            <FaBell className="mx-auto text-gray-400 text-4xl mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay alertas
-            </h3>
-            <p className="text-gray-500">
-              No tienes alertas pendientes en este momento.
-            </p>
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-medium ${
+                    activeTab === 'expiring' ? 'text-orange-300' :
+                    activeTab === 'expired' ? 'text-red-300' :
+                    activeTab === 'lowStock' ? 'text-yellow-300' :
+                    'text-pink-300'
+                  }`}>
+                    {getAlertMessage(activeTab, product)}
+                  </span>
+                  <span className="text-gray-400 text-sm">
+                    ${product.precio.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Quick Actions */}
+      {(expiringProducts.length > 0 || expiredProducts.length > 0) && (
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl p-6 border border-blue-500/20">
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <FaExclamationTriangle className="text-blue-400" />
+            Acciones Recomendadas
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {expiringProducts.length > 0 && (
+              <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
+                <h4 className="text-blue-300 font-medium mb-2">Productos por vencer</h4>
+                <p className="text-gray-300 text-sm">
+                  Considera aplicar descuentos o promociones para vender estos productos antes de que venzan.
+                </p>
+              </div>
+            )}
+            {expiredProducts.length > 0 && (
+              <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+                <h4 className="text-red-300 font-medium mb-2">Productos vencidos</h4>
+                <p className="text-gray-300 text-sm">
+                  Retira estos productos del inventario y considera contactar a proveedores para reposición.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
