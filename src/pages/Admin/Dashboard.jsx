@@ -16,14 +16,18 @@ const Dashboard = () => {
   useEffect(() => {
     setIsVisible(true);
     
-    // Datos de ejemplo para demostración
+    // Datos de productos de tienda/supermercado
     const mockProducts = [
-      { id: 1, nombre: "Laptop Dell XPS 15", categoria: "Electrónica", stock: 25, fecha: "2025-12-15", color: "blue" },
-      { id: 2, nombre: "Mouse Logitech MX", categoria: "Accesorios", stock: 8, fecha: "2025-11-20", color: "cyan" },
-      { id: 3, nombre: "Teclado Mecánico", categoria: "Accesorios", stock: 0, fecha: "2025-11-10", color: "cyan" },
-      { id: 4, nombre: "Monitor Samsung 27\"", categoria: "Electrónica", stock: 15, fecha: "2026-01-05", color: "blue" },
-      { id: 5, nombre: "Webcam HD", categoria: "Accesorios", stock: 5, fecha: "2025-11-08", color: "cyan" },
-      { id: 6, nombre: "Auriculares Sony", categoria: "Audio", stock: 30, fecha: "2026-02-20", color: "purple" },
+      { id: 1, nombre: "Leche Entera 1L", categoria: "Lácteos", stock: 25, fecha: "2025-11-20", color: "cyan" },
+      { id: 2, nombre: "Pan Blanco", categoria: "Panadería", stock: 8, fecha: "2025-11-08", color: "orange" },
+      { id: 3, nombre: "Yogur Natural", categoria: "Lácteos", stock: 0, fecha: "2025-11-10", color: "cyan" },
+      { id: 4, nombre: "Arroz 1kg", categoria: "Cereales", stock: 15, fecha: "2026-01-05", color: "green" },
+      { id: 5, nombre: "Queso Fresco", categoria: "Lácteos", stock: 5, fecha: "2025-11-09", color: "cyan" },
+      { id: 6, nombre: "Jugo de Naranja", categoria: "Bebidas", stock: 30, fecha: "2025-12-20", color: "teal" },
+      { id: 7, nombre: "Aceite de Oliva", categoria: "Aceites", stock: 12, fecha: "2026-03-15", color: "purple" },
+      { id: 8, nombre: "Cereal de Maíz", categoria: "Cereales", stock: 0, fecha: "2025-12-01", color: "green" },
+      { id: 9, nombre: "Agua Mineral 2L", categoria: "Bebidas", stock: 45, fecha: "2026-06-30", color: "teal" },
+      { id: 10, nombre: "Galletas Saladas", categoria: "Snacks", stock: 7, fecha: "2025-11-15", color: "pink" },
     ];
 
     setProducts(mockProducts);
@@ -107,7 +111,7 @@ const Dashboard = () => {
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes glow-pulse {
           0%, 100% { box-shadow: 0 0 25px var(--glow-color), 0 0 50px var(--glow-color-dim); }
           50% { box-shadow: 0 0 40px var(--glow-color), 0 0 80px var(--glow-color-dim); }

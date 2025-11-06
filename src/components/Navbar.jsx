@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaBars,
   FaTimes,
@@ -16,6 +17,7 @@ import {
 } from "react-icons/fa";
 
 const Navbar = ({ children }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -89,7 +91,7 @@ const Navbar = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setTimeout(() => {
-      window.location.href = "/";
+      navigate("/");
     }, 2000);
   };
 
@@ -132,16 +134,24 @@ const Navbar = ({ children }) => {
           {/* Menu items */}
           <ul className="relative space-y-2 flex-1 z-10">
             <li className={`${menuItemClass} ${menuItemHoverClass}`}>
-              <button onClick={() => window.location.href = '/dashboard'} className="flex items-center gap-3 w-full relative">
+              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 w-full relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FaHome size={22} className={menuItemIconClass} />
                 <span className={menuItemTextClass}>Dashboard</span>
               </button>
             </li>
+            
+             <li className={`${menuItemClass} ${menuItemHoverClass}`}>
+              <button onClick={() => navigate('/categorias')} className="flex items-center gap-3 w-full relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <FaTh size={22} className={menuItemIconClass} />
+                <span className={menuItemTextClass}>Categorías</span>
+              </button>
+            </li>
 
 
             <li className={`${menuItemClass} ${menuItemHoverClass}`}>
-              <button onClick={() => window.location.href = '/productos'} className="flex items-center gap-3 w-full relative">
+              <button onClick={() => navigate('/productos')} className="flex items-center gap-3 w-full relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FaBoxOpen size={22} className={menuItemIconClass} />
                 <span className={menuItemTextClass}>Productos</span>
@@ -150,7 +160,7 @@ const Navbar = ({ children }) => {
 
 
             <li className={`${menuItemClass} ${menuItemHoverClass}`}>
-              <button onClick={() => window.location.href = '/alertas'} className="flex items-center gap-3 w-full relative">
+              <button onClick={() => navigate('/alertas')} className="flex items-center gap-3 w-full relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FaBell size={22} className={menuItemIconClass} />
                 <span className={menuItemTextClass}>Alertas</span>
@@ -158,20 +168,13 @@ const Navbar = ({ children }) => {
             </li>
 
             <li className={`${menuItemClass} ${menuItemHoverClass}`}>
-              <button onClick={() => window.location.href = '/reportes'} className="flex items-center gap-3 w-full relative">
+              <button onClick={() => navigate('/reportes')} className="flex items-center gap-3 w-full relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FaChartPie size={22} className={menuItemIconClass} />
                 <span className={menuItemTextClass}>Reportes</span>
               </button>
             </li>
 
-            <li className={`${menuItemClass} ${menuItemHoverClass}`}>
-              <button onClick={() => window.location.href = '/categorias'} className="flex items-center gap-3 w-full relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <FaTh size={22} className={menuItemIconClass} />
-                <span className={menuItemTextClass}>Categorías</span>
-              </button>
-            </li>
           </ul>
 
           {/* Información del usuario */}
@@ -281,7 +284,7 @@ const Navbar = ({ children }) => {
                     ))}
                   </ul>
                   <button
-                    onClick={() => window.location.href = '/alertas'}
+                    onClick={() => navigate('/alertas')}
                     className="block text-center mt-4 text-blue-400 hover:text-blue-300 font-medium text-sm transition-colors duration-300"
                   >
                     Ver todas las notificaciones →
@@ -326,7 +329,7 @@ const Navbar = ({ children }) => {
                     <li className="flex items-center gap-3 hover:bg-blue-500/10 p-3 rounded-xl transition-all duration-300 group cursor-pointer">
                       <FaUserCircle size={18} className="text-blue-400 group-hover:text-blue-300" />
                       <button
-                        onClick={() => window.location.href = '/perfil'}
+                        onClick={() => navigate('/perfil')}
                         className="text-gray-300 hover:text-white font-medium w-full text-left transition-colors duration-300"
                       >
                         Ver Perfil

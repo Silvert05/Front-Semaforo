@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Plus, Edit2, Trash2, Search, Filter, X, Check, AlertCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, Filter, X, Check, AlertCircle, Calendar, Package, DollarSign, Tag, FileText } from "lucide-react";
 
-// Simulación del hook useProducts (reemplazar con tu import real)
 const useProducts = () => {
   const [products, setProducts] = useState([
     {
@@ -13,7 +12,6 @@ const useProducts = () => {
       descripcion: "Leche entera pasteurizada, ideal para consumo diario.",
       categoria: "Lácteos",
       precio: 1.50,
-      proveedor: "Distribuidora ABC",
       descuento: 0
     },
     {
@@ -25,7 +23,6 @@ const useProducts = () => {
       descripcion: "Arroz blanco de grano largo.",
       categoria: "Cereales",
       precio: 2.00,
-      proveedor: "Granos del Valle",
       descuento: 20
     },
     {
@@ -37,43 +34,6 @@ const useProducts = () => {
       descripcion: "Queso fresco tipo mozzarella.",
       categoria: "Lácteos",
       precio: 3.50,
-      proveedor: "Lácteos Premium",
-      descuento: 0
-    },
-    {
-      id: 4,
-      nombre: "Pan",
-      stock: 15,
-      color: "teal",
-      fecha: "2025-11-05",
-      descripcion: "Pan blanco integral.",
-      categoria: "Panadería",
-      precio: 1.20,
-      proveedor: "Panadería Central",
-      descuento: 0
-    },
-    {
-      id: 5,
-      nombre: "Jugo Naranja",
-      stock: 8,
-      color: "yellow",
-      fecha: "2025-10-28",
-      descripcion: "Jugo de naranja natural 100%.",
-      categoria: "Bebidas",
-      precio: 2.50,
-      proveedor: "Frutas Frescas",
-      descuento: 15
-    },
-    {
-      id: 6,
-      nombre: "Yogur",
-      stock: 0,
-      color: "pink",
-      fecha: "2025-09-30",
-      descripcion: "Yogur natural sin azúcar.",
-      categoria: "Lácteos",
-      precio: 1.80,
-      proveedor: "Lácteos Premium",
       descuento: 0
     }
   ]);
@@ -136,17 +96,17 @@ const Productos = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ type: '', message: '' });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [errors, setErrors] = useState({});
   
   const [formData, setFormData] = useState({
     nombre: "",
     stock: "",
     categoria: "",
     precio: "",
-    proveedor: "",
     fecha: "",
     descripcion: "",
     descuento: ""
@@ -159,42 +119,89 @@ const Productos = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const showSuccess = (message) => {
-    setSuccessMessage(message);
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
+  const showNotificationMessage = (type, message) => {
+    setNotification({ type, message });
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3500);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const validateForm = () => {
+    const newErrors = {};
 
-    const productData = {
-      ...formData,
-      stock: parseInt(formData.stock),
-      precio: parseFloat(formData.precio),
-      descuento: parseInt(formData.descuento) || 0
-    };
-
-    if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
-      showSuccess("✓ Producto actualizado exitosamente");
-      setEditingProduct(null);
-    } else {
-      addProduct(productData);
-      showSuccess("✓ Producto agregado exitosamente");
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = "El nombre es obligatorio";
+    } else if (formData.nombre.trim().length < 3) {
+      newErrors.nombre = "Mínimo 3 caracteres";
     }
 
-    setFormData({
-      nombre: "",
-      stock: "",
-      categoria: "",
-      precio: "",
-      proveedor: "",
-      fecha: "",
-      descripcion: "",
-      descuento: ""
-    });
-    setShowAddModal(false);
+    if (!formData.stock || parseInt(formData.stock) < 0) {
+      newErrors.stock = "Stock inválido";
+    }
+
+    if (!formData.categoria) {
+      newErrors.categoria = "Selecciona una categoría";
+    }
+
+    if (!formData.precio || parseFloat(formData.precio) <= 0) {
+      newErrors.precio = "Precio inválido";
+    }
+
+    if (!formData.fecha) {
+      newErrors.fecha = "Fecha requerida";
+    }
+
+    if (!formData.descripcion.trim()) {
+      newErrors.descripcion = "Descripción requerida";
+    }
+
+    if (formData.descuento && (parseInt(formData.descuento) < 0 || parseInt(formData.descuento) > 100)) {
+      newErrors.descuento = "Descuento entre 0-100%";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
+      showNotificationMessage('error', 'Corrige los errores del formulario');
+      return;
+    }
+
+    const productData = {
+      nombre: formData.nombre.trim(),
+      stock: parseInt(formData.stock),
+      precio: parseFloat(formData.precio),
+      descuento: parseInt(formData.descuento) || 0,
+      categoria: formData.categoria,
+      fecha: formData.fecha,
+      descripcion: formData.descripcion.trim()
+    };
+
+    try {
+      if (editingProduct) {
+        updateProduct(editingProduct.id, productData);
+        showNotificationMessage('success', `"${productData.nombre}" actualizado exitosamente`);
+        setEditingProduct(null);
+      } else {
+        addProduct(productData);
+        showNotificationMessage('success', `"${productData.nombre}" agregado exitosamente`);
+      }
+
+      setFormData({
+        nombre: "",
+        stock: "",
+        categoria: "",
+        precio: "",
+        fecha: "",
+        descripcion: "",
+        descuento: ""
+      });
+      setShowAddModal(false);
+      setErrors({});
+    } catch (error) {
+      showNotificationMessage('error', 'Error al guardar el producto');
+    }
   };
 
   const handleEdit = (product) => {
@@ -204,11 +211,11 @@ const Productos = () => {
       stock: product.stock.toString(),
       categoria: product.categoria,
       precio: product.precio.toString(),
-      proveedor: product.proveedor,
       fecha: product.fecha,
       descripcion: product.descripcion,
       descuento: product.descuento.toString()
     });
+    setErrors({});
     setShowAddModal(true);
   };
 
@@ -219,7 +226,7 @@ const Productos = () => {
 
   const confirmDelete = () => {
     deleteProduct(productToDelete.id);
-    showSuccess("✓ Producto eliminado exitosamente");
+    showNotificationMessage('success', `"${productToDelete.nombre}" eliminado exitosamente`);
     setShowDeleteConfirm(false);
     setProductToDelete(null);
   };
@@ -232,36 +239,41 @@ const Productos = () => {
       stock: "",
       categoria: "",
       precio: "",
-      proveedor: "",
       fecha: "",
       descripcion: "",
       descuento: ""
     });
+    setErrors({});
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const calculateFinalPrice = (precio, descuento) => {
+    if (descuento > 0) {
+      return precio - (precio * descuento / 100);
+    }
+    return precio;
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] p-6 relative overflow-hidden">
-      {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       <style>{`
         @keyframes slideIn {
-          from { opacity: 0; transform: translateY(30px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes shimmer {
           0% { background-position: -1000px 0; }
           100% { background-position: 1000px 0; }
-        }
-        
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
         }
         
         @keyframes fadeIn {
@@ -274,15 +286,11 @@ const Productos = () => {
           to { opacity: 1; transform: scale(1); }
         }
 
-        .animate-slide-in { animation: slideIn 0.8s ease-out forwards; }
+        .animate-slide-in { animation: slideIn 0.6s ease-out forwards; }
         .animate-shimmer {
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
           background-size: 1000px 100%;
           animation: shimmer 3s infinite;
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient-shift 8s ease infinite;
         }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
         .animate-scale-in { animation: scaleIn 0.3s ease-out; }
@@ -292,32 +300,62 @@ const Productos = () => {
           backdrop-filter: blur(20px) saturate(180%);
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .neon-glow {
-          filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor);
-        }
       `}</style>
 
+      {showNotification && (
+        <div className="fixed top-6 right-6 z-50 animate-slide-in">
+          <div className={`glass-effect rounded-2xl p-4 pr-12 shadow-2xl border-l-4 ${
+            notification.type === 'success' ? 'border-emerald-500' :
+            notification.type === 'error' ? 'border-rose-500' :
+            'border-amber-500'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                notification.type === 'success' ? 'bg-emerald-500/20' :
+                notification.type === 'error' ? 'bg-rose-500/20' :
+                'bg-amber-500/20'
+              }`}>
+                {notification.type === 'success' && <Check className="text-emerald-400" size={18} />}
+                {notification.type === 'error' && <X className="text-rose-400" size={18} />}
+              </div>
+              <div className="flex-1">
+                <p className={`font-semibold text-sm ${
+                  notification.type === 'success' ? 'text-emerald-300' :
+                  notification.type === 'error' ? 'text-rose-300' :
+                  'text-amber-300'
+                }`}>
+                  {notification.type === 'success' ? '¡Éxito!' : 'Error'}
+                </p>
+                <p className="text-gray-300 text-xs mt-0.5">{notification.message}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowNotification(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6 relative z-10">
-        {/* Header */}
         <div className="flex justify-between items-center animate-slide-in">
           <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient mb-3 neon-glow">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
               Gestión de Productos
             </h1>
-            <p className="text-gray-400 text-lg font-light tracking-wide">Administra el inventario de productos</p>
+            <p className="text-gray-400 text-lg font-light">Administra el inventario completo</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-500 transform hover:scale-105 flex items-center gap-3 overflow-hidden animate-gradient"
+            className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer"></div>
-            <Plus size={20} className="relative z-10 group-hover:rotate-90 transition-transform duration-500" />
-            <span className="relative z-10">Agregar Producto</span>
+            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+            Agregar Producto
           </button>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 animate-slide-in" style={{ animationDelay: '100ms' }}>
           <div className="flex-1 relative group">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-cyan-400 transition-colors duration-300" size={20} />
@@ -326,7 +364,7 @@ const Productos = () => {
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 glass-effect rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              className="w-full pl-12 pr-4 py-4 glass-effect rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
             />
           </div>
           <div className="relative group">
@@ -334,7 +372,7 @@ const Productos = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="pl-12 pr-8 py-4 glass-effect rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer transition-all duration-300"
+              className="pl-12 pr-8 py-4 glass-effect rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer transition-all duration-300 min-w-[200px]"
             >
               <option value="">Todas las categorías</option>
               {categories.map(category => (
@@ -344,12 +382,11 @@ const Productos = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product, index) => (
             <div 
               key={product.id} 
-              className="glass-effect rounded-3xl p-8 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-500 group relative overflow-hidden animate-slide-in"
+              className="glass-effect rounded-3xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-500 group relative overflow-hidden animate-slide-in"
               style={{ 
                 animationDelay: `${200 + index * 100}ms`,
                 boxShadow: '0 8px 32px rgba(59, 130, 246, 0.15)'
@@ -357,204 +394,275 @@ const Productos = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex-1">
-                  <h3 className="font-bold text-white text-xl mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                    {product.nombre}
-                  </h3>
-                  <span className="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                    {product.categoria}
-                  </span>
+              <div className="relative z-10 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-black text-white text-2xl mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-blue-400 group-hover:bg-clip-text transition-all duration-300">
+                      {product.nombre}
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Tag size={12} />
+                      {product.categoria}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-sm border shadow-lg flex items-center gap-1.5 ${
+                      product.stock === 0 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
+                      product.stock <= 10 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                      'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
+                      <Package size={14} />
+                      {product.stock}
+                    </span>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="p-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/40 transition-all duration-300 border border-blue-500/30 hover:scale-110"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(product)}
+                        className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/40 transition-all duration-300 border border-red-500/30 hover:scale-110"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-sm border shadow-lg ${product.stock === 0 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-rose-500/30' : product.stock <= 10 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/30'}`}>
-                    {product.stock}
-                  </span>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      onClick={() => handleEdit(product)}
-                      className="p-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/40 transition-all duration-300 border border-blue-500/30 hover:scale-110"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(product)}
-                      className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/40 transition-all duration-300 border border-red-500/30 hover:scale-110"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+
+                <div className="pt-4 border-t border-gray-700/50 space-y-2.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign size={16} className="text-emerald-400" />
+                    <span className="text-gray-400">Precio:</span>
+                    {product.descuento > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 line-through">${product.precio.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-bold">${calculateFinalPrice(product.precio, product.descuento).toFixed(2)}</span>
+                        <span className="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-lg text-xs font-bold">-{product.descuento}%</span>
+                      </div>
+                    ) : (
+                      <span className="text-white font-bold">${product.precio.toFixed(2)}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar size={16} className="text-purple-400" />
+                    <span className="text-gray-400">Vence:</span>
+                    <span className="text-white font-medium">{formatDate(product.fecha)}</span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-sm pt-2">
+                    <FileText size={16} className="text-cyan-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-gray-400 block mb-1">Descripción:</span>
+                      <p className="text-gray-300 text-xs leading-relaxed">
+                        {product.descripcion}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-2 text-sm relative z-10">
-                <p className="text-gray-400"><span className="text-gray-300 font-semibold">Categoría:</span> {product.categoria}</p>
-                <p className="text-gray-400"><span className="text-gray-300 font-semibold">Precio:</span> ${product.precio.toFixed(2)}</p>
-                <p className="text-gray-400"><span className="text-gray-300 font-semibold">Proveedor:</span> {product.proveedor}</p>
-                {product.descuento > 0 && (
-                  <p className="text-green-400"><span className="text-green-300 font-semibold">Descuento:</span> {product.descuento}%</p>
-                )}
-              </div>
-              
-              <div className="absolute -bottom-8 -right-8 w-24 h-24 rounded-full bg-blue-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-blue-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="glass-effect rounded-3xl p-8 w-full max-w-2xl border-2 border-blue-500/30 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 0 80px rgba(59, 130, 246, 0.3)' }}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="glass-effect rounded-3xl p-8 w-full max-w-3xl border-2 border-blue-500/30 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                {editingProduct ? 'Editar Producto' : 'Agregar Nuevo Producto'}
-              </h2>
+              <div>
+                <h2 className="text-3xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+                </h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  {editingProduct ? 'Modifica la información del producto' : 'Completa todos los campos'}
+                </p>
+              </div>
               <button
                 onClick={closeModal}
-                className="p-2 bg-gray-700/50 hover:bg-gray-600/50 rounded-xl transition-all duration-300 hover:rotate-90"
+                className="w-10 h-10 rounded-xl bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-white transition-all duration-300 flex items-center justify-center"
               >
-                <X size={24} className="text-gray-300" />
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Nombre</label>
+                  <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    Nombre del Producto
+                    <span className="text-rose-400">*</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
+                    onChange={(e) => {
+                      setFormData({...formData, nombre: e.target.value});
+                      if (errors.nombre) setErrors({...errors, nombre: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.nombre ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
+                    placeholder="Ej: Leche 1L"
                   />
+                  {errors.nombre && <p className="text-rose-400 text-xs mt-1">{errors.nombre}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Stock</label>
+                  <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    Stock Disponible
+                    <span className="text-rose-400">*</span>
+                  </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.stock}
-                    onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
+                    onChange={(e) => {
+                      setFormData({...formData, stock: e.target.value});
+                      if (errors.stock) setErrors({...errors, stock: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.stock ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
+                    placeholder="0"
                   />
+                  {errors.stock && <p className="text-rose-400 text-xs mt-1">{errors.stock}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Categoría</label>
+                  <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    Categoría
+                    <span className="text-rose-400">*</span>
+                  </label>
                   <select
                     value={formData.categoria}
-                    onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
+                    onChange={(e) => {
+                      setFormData({...formData, categoria: e.target.value});
+                      if (errors.categoria) setErrors({...errors, categoria: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.categoria ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
                   >
-                    <option value="">Seleccionar categoría</option>
+                    <option value="">Seleccionar...</option>
                     {categories.map(category => (
                       <option key={category.id} value={category.nombre}>{category.nombre}</option>
                     ))}
                   </select>
+                  {errors.categoria && <p className="text-rose-400 text-xs mt-1">{errors.categoria}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Precio</label>
+                  <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    Precio Unitario
+                    <span className="text-rose-400">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.precio}
-                    onChange={(e) => setFormData({...formData, precio: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
+                    onChange={(e) => {
+                      setFormData({...formData, precio: e.target.value});
+                      if (errors.precio) setErrors({...errors, precio: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.precio ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
+                    placeholder="0.00"
                   />
+                  {errors.precio && <p className="text-rose-400 text-xs mt-1">{errors.precio}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Proveedor</label>
-                  <input
-                    type="text"
-                    value={formData.proveedor}
-                    onChange={(e) => setFormData({...formData, proveedor: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">Fecha de Vencimiento</label>
+                  <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    Fecha de Vencimiento
+                    <span className="text-rose-400">*</span>
+                  </label>
                   <input
                     type="date"
                     value={formData.fecha}
-                    onChange={(e) => setFormData({...formData, fecha: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    required
+                    onChange={(e) => {
+                      setFormData({...formData, fecha: e.target.value});
+                      if (errors.fecha) setErrors({...errors, fecha: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.fecha ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
                   />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-white text-sm font-medium mb-2">Descripción</label>
-                  <textarea
-                    value={formData.descripcion}
-                    onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none transition-all duration-300"
-                    required
-                  />
+                  {errors.fecha && <p className="text-rose-400 text-xs mt-1">{errors.fecha}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">Descuento (%)</label>
+                  <label className="block text-white text-sm font-bold mb-2">
+                    Descuento (%)
+                  </label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={formData.descuento}
-                    onChange={(e) => setFormData({...formData, descuento: e.target.value})}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                    onChange={(e) => {
+                      setFormData({...formData, descuento: e.target.value});
+                      if (errors.descuento) setErrors({...errors, descuento: ''});
+                    }}
+                    className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 ${
+                      errors.descuento ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                    }`}
+                    placeholder="0"
                   />
+                  {errors.descuento && <p className="text-rose-400 text-xs mt-1">{errors.descuento}</p>}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  Descripción del Producto
+                  <span className="text-rose-400">*</span>
+                </label>
+                <textarea
+                  value={formData.descripcion}
+                  onChange={(e) => {
+                    setFormData({...formData, descripcion: e.target.value});
+                    if (errors.descripcion) setErrors({...errors, descripcion: ''});
+                  }}
+                  className={`w-full p-3 bg-gray-800/50 border-2 rounded-xl text-white focus:outline-none transition-all duration-300 h-24 resize-none ${
+                    errors.descripcion ? 'border-rose-500' : 'border-gray-700 focus:border-blue-500'
+                  }`}
+                  placeholder="Describe las características del producto..."
+                />
+                {errors.descripcion && <p className="text-rose-400 text-xs mt-1">{errors.descripcion}</p>}
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300 transform hover:scale-105"
+                  type="button"
+                  onClick={handleSubmit}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
                 >
+                  <Check size={16} />
                   {editingProduct ? 'Actualizar Producto' : 'Agregar Producto'}
                 </button>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-6 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors duration-300"
+                  className="px-8 py-4 bg-gray-700/50 text-white rounded-2xl font-bold hover:bg-gray-700 transition-all duration-300 border border-gray-600"
                 >
                   Cancelar
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none animate-fade-in">
-          <div className="glass-effect rounded-3xl p-8 border-2 border-green-500/50 shadow-2xl animate-scale-in pointer-events-auto" style={{ boxShadow: '0 0 60px rgba(16, 185, 129, 0.4)' }}>
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-green-500/20 rounded-2xl">
-                <Check size={32} className="text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-white mb-1">¡Éxito!</h3>
-                <p className="text-green-300 text-lg font-semibold">{successMessage}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && productToDelete && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="glass-effect rounded-3xl p-10 w-full max-w-lg border-2 border-rose-500/30 shadow-2xl animate-scale-in" style={{ boxShadow: '0 0 80px rgba(244, 63, 94, 0.3)' }}>
+          <div className="glass-effect rounded-3xl p-10 w-full max-w-lg border-2 border-rose-500/30 shadow-2xl animate-scale-in">
             <div className="text-center">
               <div className="mx-auto w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6">
                 <AlertCircle size={40} className="text-rose-400" />

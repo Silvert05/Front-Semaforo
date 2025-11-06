@@ -16,21 +16,23 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar si hay una sesión existente al cargar
+    // Verificar sesión persistente al cargar la aplicación
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
     if (token && userData) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        const user = JSON.parse(userData);
+        setUser(user);
         setIsAuthenticated(true);
       } catch (error) {
-        // Si hay error al parsear, limpiar datos
+        console.error('Error parsing user data:', error);
+        // Limpiar datos corruptos
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
+
     setLoading(false);
   }, []);
 
