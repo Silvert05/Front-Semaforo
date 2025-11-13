@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { FaTrafficLight, FaPercent, FaInfoCircle, FaArrowRight } from "react-icons/fa";
+import { FaTrafficLight, FaPercent, FaInfoCircle, FaArrowRight, FaShoppingCart } from "react-icons/fa"; // Añadir FaShoppingCart
 import { useLocation } from "react-router-dom";
 import Topbar from "../component/Topbar";
 import Semaforo from "./Semaforo";
 import Promociones from "./Promociones";
 import DetalleProducto from "./DetalleProducto";
+import Cart from "./Cart"; // Importar el nuevo componente Cart
 
 export default function Home() {
   const location = useLocation();
@@ -19,6 +20,8 @@ export default function Home() {
       setActiveTab("promociones");
     } else if (path === "/detalle-producto") {
       setActiveTab("detalle");
+    } else if (path === "/cart") { // Nuevo: Ruta para el carrito
+      setActiveTab("cart");
     } else {
       setActiveTab("semaforo");
     }
@@ -32,6 +35,8 @@ export default function Home() {
         return <Promociones />;
       case "detalle":
         return <DetalleProducto />;
+      case "cart": // Nuevo caso: Renderiza el carrito
+        return <Cart />;
       default:
         return <Semaforo />;
     }
@@ -67,6 +72,16 @@ export default function Home() {
       borderColor: "border-purple-500/30",
       textColor: "text-purple-400",
       emoji: "🔍"
+    },
+    { // Nuevo Tab para el Carrito
+      id: "cart",
+      label: "Carrito",
+      icon: FaShoppingCart,
+      color: "from-green-500 to-blue-500",
+      bgColor: "from-green-500/20 to-blue-500/20",
+      borderColor: "border-green-500/30",
+      textColor: "text-green-400",
+      emoji: "🛒"
     }
   ];
 
@@ -116,6 +131,13 @@ export default function Home() {
             className="bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-all duration-300 flex items-center gap-2"
           >
             🔄 Actualizar Datos
+          </button>
+          {/* Botón rápido para el Carrito */}
+          <button
+            onClick={() => setActiveTab("cart")}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${activeTab === 'cart' ? 'bg-green-600 text-white' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+          >
+            <FaShoppingCart /> Ver Carrito
           </button>
         </div>
       </div>

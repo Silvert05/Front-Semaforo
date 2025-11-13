@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaShoppingCart, FaHeart, FaShare, FaStar, FaCalendarAlt, FaBoxOpen, FaTruck, FaShieldAlt } from "react-icons/fa";
-import { useProducts } from "../../../context/ProductContext";
+// Importar addToCart
+import { useProducts } from "../../../context/ProductContext"; 
 import ProductCard from "../../../components/ProductCard";
 
 const DetalleProducto = () => {
-  const { products } = useProducts();
+  // Obtener products y addToCart
+  const { products, addToCart } = useProducts(); 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -12,7 +14,8 @@ const DetalleProducto = () => {
   useEffect(() => {
     // Seleccionar un producto de ejemplo (el primero disponible)
     if (products.length > 0) {
-      const product = products[0]; // O podrías implementar selección por ID/ruta
+      // Usamos el primer producto para la demostración
+      const product = products[0]; 
       setSelectedProduct(product);
 
       // Productos relacionados de la misma categoría
@@ -77,6 +80,8 @@ const DetalleProducto = () => {
                 color={selectedProduct.color}
                 fecha={selectedProduct.fecha}
                 descuento={selectedProduct.descuento}
+                // Se añade la prop imagen
+                imagen={selectedProduct.imagen}
               />
             </div>
           </div>
@@ -140,7 +145,15 @@ const DetalleProducto = () => {
           <div className="flex gap-4">
             <button
               disabled={selectedProduct.stock === 0}
-              onClick={() => alert(selectedProduct.stock === 0 ? 'Producto agotado' : `Producto "${selectedProduct.nombre}" agregado al carrito (simulado)`)}
+              // Lógica de agregar al carrito actualizada
+              onClick={() => {
+                if (selectedProduct.stock > 0) {
+                    addToCart(selectedProduct);
+                    alert(`Producto "${selectedProduct.nombre}" agregado al carrito.`);
+                } else {
+                    alert('Producto agotado');
+                }
+              }}
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               <FaShoppingCart size={16} />
@@ -200,6 +213,8 @@ const DetalleProducto = () => {
                   color={product.color}
                   fecha={product.fecha}
                   descuento={product.descuento}
+                  // Se añade la prop imagen
+                  imagen={product.imagen} 
                 />
                 <div className="mt-3 text-center">
                   <p className="text-green-400 font-semibold">${product.precio.toFixed(2)}</p>
