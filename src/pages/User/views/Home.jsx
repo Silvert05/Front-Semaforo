@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { FaTrafficLight, FaPercent, FaInfoCircle, FaArrowRight, FaShoppingCart } from "react-icons/fa"; // Añadir FaShoppingCart
+import { FaTrafficLight, FaPercent, FaInfoCircle, FaRedo } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import Topbar from "../component/Topbar";
 import Semaforo from "./Semaforo";
 import Promociones from "./Promociones";
 import DetalleProducto from "./DetalleProducto";
-import Cart from "./Cart"; // Importar el nuevo componente Cart
 
 export default function Home() {
   const location = useLocation();
@@ -20,8 +19,6 @@ export default function Home() {
       setActiveTab("promociones");
     } else if (path === "/detalle-producto") {
       setActiveTab("detalle");
-    } else if (path === "/cart") { // Nuevo: Ruta para el carrito
-      setActiveTab("cart");
     } else {
       setActiveTab("semaforo");
     }
@@ -35,131 +32,53 @@ export default function Home() {
         return <Promociones />;
       case "detalle":
         return <DetalleProducto />;
-      case "cart": // Nuevo caso: Renderiza el carrito
-        return <Cart />;
       default:
         return <Semaforo />;
     }
   };
 
-  const tabs = [
-    {
-      id: "semaforo",
-      label: "Semáforo",
-      icon: FaTrafficLight,
-      color: "from-cyan-500 to-blue-500",
-      bgColor: "from-cyan-500/20 to-blue-500/20",
-      borderColor: "border-cyan-500/30",
-      textColor: "text-cyan-400",
-      emoji: "🟢"
-    },
-    {
-      id: "promociones",
-      label: "Promociones",
-      icon: FaPercent,
-      color: "from-orange-500 to-red-500",
-      bgColor: "from-orange-500/20 to-red-500/20",
-      borderColor: "border-orange-500/30",
-      textColor: "text-orange-400",
-      emoji: "🟡"
-    },
-    {
-      id: "detalle",
-      label: "Detalle",
-      icon: FaInfoCircle,
-      color: "from-purple-500 to-pink-500",
-      bgColor: "from-purple-500/20 to-pink-500/20",
-      borderColor: "border-purple-500/30",
-      textColor: "text-purple-400",
-      emoji: "🔍"
-    },
-    { // Nuevo Tab para el Carrito
-      id: "cart",
-      label: "Carrito",
-      icon: FaShoppingCart,
-      color: "from-green-500 to-blue-500",
-      bgColor: "from-green-500/20 to-blue-500/20",
-      borderColor: "border-green-500/30",
-      textColor: "text-green-400",
-      emoji: "🛒"
-    }
-  ];
-
   return (
-    <Topbar>
-      {/* Welcome Section - More Extravagant */}
-      <div className="text-center mb-12">
-        <div className="inline-block p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl mb-6">
-          <div className="bg-black/50 backdrop-blur-lg rounded-3xl px-8 py-4">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2 animate-pulse">
-              SEMAFORO
+    // CAMBIO: Fondo general más claro
+    <div className="min-h-screen bg-gray-50"> 
+        {/* Usamos el Topbar (asumiendo que tiene manejo de navegación) */}
+        <Topbar activeTab={activeTab} setActiveTab={setActiveTab}>
+          <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+            {/* Título en color de acento y texto oscuro */}
+            <h1 className="text-3xl font-extrabold text-gray-900">
+              ECOSTOCK <span className="text-green-600">|</span> Inventario
             </h1>
-            <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto"></div>
+            
+            {/* BOTONES RÁPIDOS */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => alert("Datos actualizados (Simulado).")}
+                // CAMBIO: Botón con fondo blanco/gris claro
+                className="bg-white text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 flex items-center gap-2 border border-gray-300 shadow-sm"
+              >
+                <FaRedo className="text-green-600"/> Actualizar
+              </button>
+            </div>
           </div>
-        </div>
 
-        <p className="text-white text-2xl max-w-4xl mx-auto leading-relaxed font-light">
-          <span className="font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Sistema Inteligente de Gestión de Inventario
-          </span>
-          <br />
-          Visualiza el estado de tus productos con nuestro innovador sistema de semáforo y descubre ofertas exclusivas.
-        </p>
-
-        {/* Stats Overview */}
-        <div className="flex justify-center gap-8 mt-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-            <div className="text-3xl font-bold text-green-400">🟢</div>
-            <div className="text-white font-semibold">Stock Bueno</div>
+          {/* Content Area */}
+          <div className="transition-all duration-500 ease-in-out">
+            {/* CAMBIO: Contenedor con fondo blanco, sombra y borde sutil */}
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+              <div className="p-8">
+                {renderContent()}
+              </div>
+            </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-            <div className="text-3xl font-bold text-yellow-400">🟡</div>
-            <div className="text-white font-semibold">Stock Bajo</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-            <div className="text-3xl font-bold text-red-400">🔴</div>
-            <div className="text-white font-semibold">Agotado</div>
-          </div>
-        </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="flex justify-center mb-6">
-        <div className="flex gap-4">
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-all duration-300 flex items-center gap-2"
-          >
-            🔄 Actualizar Datos
-          </button>
-          {/* Botón rápido para el Carrito */}
-          <button
-            onClick={() => setActiveTab("cart")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${activeTab === 'cart' ? 'bg-green-600 text-white' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
-          >
-            <FaShoppingCart /> Ver Carrito
-          </button>
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="transition-all duration-500 ease-in-out">
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-gray-700/50 shadow-2xl overflow-hidden">
-          <div className="p-8">
-            {renderContent()}
+          {/* Footer Info */}
+          <div className="text-center mt-12">
+            {/* CAMBIO: Footer con colores claros */}
+            <div className="inline-flex items-center gap-4 px-6 py-3 bg-green-500/10 rounded-full border border-green-300 text-gray-700 text-sm">
+              <FaInfoCircle className="text-green-600" />
+              ECOSTOCK - Sistema de gestión de inventario inteligente.
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Footer Info */}
-      <div className="text-center mt-12">
-        <div className="inline-flex items-center gap-4 px-6 py-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full border border-blue-500/20">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-gray-400 text-sm">
-            Sistema actualizado en tiempo real • Última sincronización: {new Date().toLocaleTimeString()}
-          </span>
-        </div>
-      </div>
-    </Topbar>
+        </Topbar>
+    </div>
   );
 }
