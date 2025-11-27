@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   FaBars,
   FaTimes,
@@ -18,6 +19,7 @@ import {
 
 const Navbar = ({ children }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -86,10 +88,8 @@ const Navbar = ({ children }) => {
     setDropdownOpen(false);
   };
   const handleLogout = () => {
+    logout(); // Limpiar estado y localStorage
     setShowLottie(true);
-    // Limpiar datos de autenticación
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setTimeout(() => {
       navigate("/");
     }, 2000);
